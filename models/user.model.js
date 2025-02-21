@@ -61,10 +61,52 @@ const userSchema = new mongoose.Schema({
         enum: ["active", "banned", "suspended"],
         default: "active",
     },
+    likedVideos: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Video",
+            default: [],
+        },
+    ],
+    dislikedVideos: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Video",
+            default: [],
+        }
+    ],
+    subscribers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: [],
+        }
+    ],
+    subscribedTo: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: [],
+        }
+    ],
+
+
+
     lastLogin: {
         type: Date,
         default: Date.now,
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    emailVerificationToken: {
+        type: String,
+    },
+    emailVerificationTokenExpires: {
+        type: Date,
+    },
+
 
 
 
