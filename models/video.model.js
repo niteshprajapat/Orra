@@ -15,6 +15,10 @@ const videoSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    isDelete: {
+        type: Boolean,
+        default: false,
+    },
     category: {
         type: String,
         enum: ['education', 'entertainment', 'gaming', 'vlogs', 'music', 'sports'],
