@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { sendOTPEmail, sendVerificationEmail } from "../utils/emailHandler.js";
+import { forgotPasswordEmmail, sendOTPEmail, sendVerificationEmail } from "../utils/emailHandler.js";
 
 
 // register
@@ -182,6 +182,7 @@ export const logout = async (req, res) => {
 
 // verifyAccount
 export const verifyAccount = async (req, res) => {
+
     try {
 
         const { email, otp } = req.body;
@@ -269,6 +270,108 @@ export const resentOtp = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error in resentOtp API!",
+        });
+    }
+}
+
+// forgotPassword
+export const forgotPassword = async (req, res) => {
+    try {
+
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        const min = Math.pow(10, 5);
+        const max = Math.pow(10, 6) - 1;
+        const otp = crypto.randomInt(min, max);
+
+        user.resetToken = otp;
+        user.resetTokenExpires = new Date(Date.now() + 2 * 60 * 1000);
+
+        await user.save();
+
+        await forgotPasswordEmmail(user.email, otp);
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent for forgot password Successfully!",
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in forgotPassword API!",
+        });
+    }
+}
+
+
+// resetPassword
+export const resetPassword = async (req, res) => {
+    try {
+
+        const { email, otp, newPassword } = req.body;
+
+        const user = await User.findOne({ email });
+
+        if (!otp || !user.resetToken) {
+            return res.status(404).json({
+                success: false,
+                message: "Invalid Request!",
+            });
+        }
+
+        if (Date.now() > user.resetTokenExpires) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP Expired!",
+            });
+        }
+
+        if (otp !== user.resetToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP!",
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password is too short! Password must greater than 6 characters!",
+            });
+        }
+
+        const hashedNewPassword = await argon2.hash(newPassword);
+
+        user.password = hashedNewPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpires = undefined;
+
+        await user.save();
+
+        user.password = undefined;
+
+
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Password Reset Successfully!",
+            user,
+        });
+
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in resetPassword API!",
         });
     }
 }
