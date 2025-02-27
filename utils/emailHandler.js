@@ -55,3 +55,21 @@ export const sendVerificationEmail = async (userEmail) => {
         console.log(error);
     }
 }
+
+
+export const forgotPasswordEmmail = async (userEmail, otp) => {
+    try {
+        const info = await transporter.sendMail({
+            from: `Orra <${process.env.EMAIL_USER}>`,
+            to: userEmail,
+            subject: "OTP for forgot password",
+            text: 'Forgot Password OTP',
+            html: `<p>OTP for forgot password: ${otp}</p>`
+        });
+
+        console.log(`OTP email sent. ${info.messageId}`);
+
+    } catch (error) {
+        console.log(error);
+    }
+}
