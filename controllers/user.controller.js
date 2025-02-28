@@ -41,6 +41,26 @@ export const getUserById = async (req, res) => {
     }
 }
 
+// meProfile
+export const meProfile = async (req, res) => {
+    try {
+        const user = req.user;
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched your Profile",
+            user,
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getUserById API!",
+        });
+    }
+}
+
 
 // deleteUserById
 export const deleteUserById = async (req, res) => {
@@ -127,6 +147,39 @@ export const getAllDeletedUsers = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error in getUserById API!",
+        });
+    }
+}
+
+// changeStatus
+export const changeStatus = async (req, res) => {
+    try {
+
+        const { statusType } = req.body;
+        const { userId } = req.params;
+
+        const user = await User.findById(userId);
+
+        if (statusType.toLowerCase() === "banned") {
+            user.status = "banned";
+        } else if (statusType.toLowerCase() === "suspended") {
+            user.status = "suspended";
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `User status updated to ${statusType}`,
+        })
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in changeStatus API!",
         });
     }
 }
