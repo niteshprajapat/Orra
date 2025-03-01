@@ -47,7 +47,7 @@ export const register = async (req, res) => {
         });
 
 
-        user.password = null;
+        user.password = undefined;
         return res.status(200).json({
             success: true,
             message: "User Account created Successfully!",
@@ -92,12 +92,14 @@ export const login = async (req, res) => {
             });
         }
 
-        console.log("user => ", user);
 
         if (user.isVerified) {
             const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
                 expiresIn: '1d',
             });
+
+
+            user.password = undefined;
 
             return res.status(200).cookie("orra", token, {
                 httpOnly: true,
@@ -354,24 +356,54 @@ export const resetPassword = async (req, res) => {
 
         user.password = undefined;
 
-
-
-
         return res.status(200).json({
             success: true,
             message: "Password Reset Successfully!",
             user,
         });
 
-
-
-
-
     } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
             message: "Error in resetPassword API!",
+        });
+    }
+}
+
+
+// resetPassword
+export const changePassword = async (req, res) => {
+    try {
+
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user._id;
+
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required!",
+            });
+        }
+
+        const user = await User.findById(userId);
+
+        const hashedNewPassword = await argon2.hash(newPassword);
+
+        user.password = hashedNewPassword;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password Changed Successfully!",
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in changePassword API!",
         });
     }
 }
