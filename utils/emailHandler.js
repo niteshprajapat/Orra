@@ -73,3 +73,49 @@ export const forgotPasswordEmmail = async (userEmail, otp) => {
         console.log(error);
     }
 }
+
+
+// This is actual function
+export const updateEmailRequest = async (userEmail, token) => {
+    try {
+        const info = await transporter.sendMail({
+            from: `Orra <${process.env.EMAIL_USER}>`,
+            to: userEmail,
+            subject: "Token for email update",
+            text: 'Email Update Token',
+            html: `<p>Token for email update: ${token}</p>`
+        });
+
+        console.log(`Token email sent. ${info.messageId}`);
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+
+
+
+export const verifyEmailUpdateEmail = async (userEmail) => {
+    try {
+        const info = await transporter.sendMail({
+            from: `Orra <${process.env.EMAIL_USER}>`,
+            to: userEmail,
+            subject: "Email Updated",
+            text: 'Email Updated',
+            html: `<p>
+                    Congratulations 🚀🚀 
+
+                    Your email updated Successfully!🔥🚀
+            </p>`
+        });
+
+        console.log(`Email Updated . ${info.messageId}`);
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
