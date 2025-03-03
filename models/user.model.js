@@ -24,18 +24,34 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
     role: {
         type: String,
         enum: ["user", "admin"],
         default: "user",
     },
     profilePicture: {
-        type: String,
-        default: "",
+        url: {
+            type: String,
+            default: "",
+        },
+        public_id: {
+            type: String,
+            default: "",
+        },
     },
     coverImage: {
-        type: String,
-        default: "",
+        url: {
+            type: String,
+            default: "",
+        },
+        public_id: {
+            type: String,
+            default: "",
+        },
     },
     bio: {
         type: String,
@@ -89,8 +105,12 @@ const userSchema = new mongoose.Schema({
             default: [],
         }
     ],
-
-
+    otp: {
+        type: Number,
+    },
+    optExpires: {
+        type: Date,
+    },
 
     lastLogin: {
         type: Date,
@@ -106,6 +126,27 @@ const userSchema = new mongoose.Schema({
     emailVerificationTokenExpires: {
         type: Date,
     },
+
+    resetToken: {
+        type: Number
+    },
+    resetTokenExpires: {
+        type: Date,
+    },
+
+
+    loginHistory: [
+        {
+            ip: String,
+            device: String,
+            timestamp: { type: Date, default: Date.now },
+            status: { type: String, enum: ["success", "failed"], default: "success" },
+        }
+    ],
+
+
+    emailVerificationToken: { type: String },
+    emailVerificationTokenExpires: { type: Date },
 
 
 
