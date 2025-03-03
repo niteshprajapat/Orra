@@ -68,6 +68,8 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const devices = req.useragent
+        const ipAddress = req.ip;
 
         if (!email || !password) {
             return res.status(404).json({
@@ -86,6 +88,21 @@ export const login = async (req, res) => {
 
         const isPasswordMatched = await argon2.verify(user.password, password);
         if (!isPasswordMatched) {
+
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $push: {
+                        loginHistory: {
+                            ip: ipAddress,
+                            device: `${devices.browser} on ${devices.os}`,
+                            status: "failed",
+                        }
+                    }
+                },
+                { new: true },
+            );
+
             return res.status(400).json({
                 success: false,
                 message: "Invalid Credentials!",
@@ -98,6 +115,19 @@ export const login = async (req, res) => {
                 expiresIn: '1d',
             });
 
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $push: {
+                        loginHistory: {
+                            ip: ipAddress,
+                            device: `${devices.browser} on ${devices.os}`,
+                            status: "success",
+                        }
+                    }
+                },
+                { new: true },
+            );
 
             user.password = undefined;
 
