@@ -1,6 +1,8 @@
 import User from "../models/user.model.js";
 import crypto from 'crypto';
 import { updateEmailRequest, verifyEmailUpdateEmail } from "../utils/emailHandler.js";
+import cloudinary from '../config/cloudinary.js';
+
 
 
 // getUserById
@@ -493,6 +495,170 @@ export const verifyEmailUpdate = async (req, res) => {
 }
 
 
+// getListofSubscribers
+export const getListofSubscribers = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "UserId Not Found!",
+            });
+        }
+
+        const user = await User.findById(userId).select("subscribers").lean().populate({
+            path: "subscribers",
+            select: "fullname username email"
+        });
+
+        // const user = await User.aggregate([
+        //     {
+        //         $match: {
+        //             _id: new mongoose.Schema.Types.ObjectId(userId),
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             subscribers: 1,
+        //         },
+        //     }
+        // ]);
+
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetch all subscribers of user",
+            user,
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getListofSubscribers API!",
+        });
+    }
+}
+
+
+// getListofSubscriberTo
+export const getListofSubscribedTo = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "UserId Not Found!",
+            });
+        }
+
+        const user = await User.findById(userId).select("subscribedTo").lean().populate({
+            path: "subscribedTo",
+            select: "fullname username email"
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetch all subscribedTo of user",
+            user,
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getListofSubscribedTo API!",
+        });
+    }
+}
+
+
+
+
+
+// uploadProfilePhoto
+export const uploadProfilePhoto = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: "File is required!",
+            });
+        }
+
+        const user = await User.findById(userId);
+
+        if (user.profilePicture.public_id) {
+            await cloudinary.uploader.destroy(user.profilePicture.public_id);
+        }
+
+        const result = await cloudinary.uploader.upload(file.path, {
+            folder: "profile_photos"
+        });
+
+        user.profilePicture.url = result.secure_url;
+        user.profilePicture.public_id = result.public_id;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile Photo Uploaded Successfully!",
+            profilePicture: user.profilePicture,
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in uploadProfilePhoto API!",
+        });
+    }
+}
+
+// deleteProfilePhoto
+export const deleteProfilePhoto = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user.profilePicture.public_id) {
+            return res.status(400).json({
+                success: false,
+                message: "No Profile Photo Found!",
+            })
+        }
+
+        // Delete from cloudinary
+        await cloudinary.uploader.destroy(user.profilePicture.public_id);
+
+        // Remove from DB
+        user.profilePicture.url = "";
+        user.profilePicture.public_id = "";
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile Photo Deleted!",
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteProfilePhoto API!",
+        });
+    }
+}
 
 
 
@@ -500,6 +666,88 @@ export const verifyEmailUpdate = async (req, res) => {
 
 
 
+
+
+// uploadCoverImage
+export const uploadCoverImage = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: "File is required!",
+            });
+        }
+
+        const user = await User.findById(userId);
+
+        if (user.coverImage.public_id) {
+            await cloudinary.uploader.destroy(user.coverImage.public_id);
+        }
+
+        const result = await cloudinary.uploader.upload(file.path, {
+            folder: "cover_images"
+        });
+
+        user.coverImage.url = result.secure_url;
+        user.coverImage.public_id = result.public_id;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Cover Image Uploaded Successfully!",
+            coverImage: user.coverImage,
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in uploadProfilePhoto API!",
+        });
+    }
+}
+
+
+// deleteCoverImage
+export const deleteCoverImage = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user.coverImage.public_id) {
+            return res.status(400).json({
+                success: false,
+                message: "No Cover Image Found!",
+            })
+        }
+
+        // Delete from cloudinary
+        await cloudinary.uploader.destroy(user.coverImage.public_id);
+
+        // Remove from DB
+        user.coverImage.url = "";
+        user.coverImage.public_id = "";
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Cover Image Deleted!",
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteProfilePhoto API!",
+        });
+    }
+}
 
 // ADMIN CONTROLLERS
 
