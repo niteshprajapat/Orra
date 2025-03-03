@@ -28,7 +28,6 @@ export const isAuthenticated = async (req, res, next) => {
         console.log("user", user);
 
 
-        user.password = null;
         req.user = user;
 
         next();
