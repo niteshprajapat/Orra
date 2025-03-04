@@ -1,4 +1,3 @@
-import { type } from "express/lib/response";
 import mongoose from "mongoose";
 
 
@@ -12,9 +11,26 @@ const videoSchema = new mongoose.Schema({
         required: true,
     },
     thumbnail: {
-        type: String,
-        default: "",
+        url: {
+            type: String,
+            default: "",
+        },
+        public_id: {
+            type: String,
+            default: "",
+        },
     },
+    videoUrl: {
+        url: {
+            type: String,
+            required: true,
+        },
+        public_id: {
+            type: String,
+            required: true,
+        },
+    },
+
     isDelete: {
         type: Boolean,
         default: false,
