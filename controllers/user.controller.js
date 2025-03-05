@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import crypto from 'crypto';
 import { updateEmailRequest, verifyEmailUpdateEmail } from "../utils/emailHandler.js";
 import cloudinary from '../config/cloudinary.js';
+import fs from 'fs';
 
 
 
@@ -603,6 +604,9 @@ export const uploadProfilePhoto = async (req, res) => {
             folder: "profile_photos"
         });
 
+        // Delete the file from disk after successful upload
+        fs.unlinkSync(file.path);
+
         user.profilePicture.url = result.secure_url;
         user.profilePicture.public_id = result.public_id;
 
@@ -690,6 +694,10 @@ export const uploadCoverImage = async (req, res) => {
         const result = await cloudinary.uploader.upload(file.path, {
             folder: "cover_images"
         });
+
+
+        // Delete the file from disk after successful upload
+        fs.unlinkSync(file.path);
 
         user.coverImage.url = result.secure_url;
         user.coverImage.public_id = result.public_id;
