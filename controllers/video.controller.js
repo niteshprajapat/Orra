@@ -297,12 +297,161 @@ export const updateVideoDetails = async (req, res) => {
 
         await video.save();
 
-
         return res.status(200).json({
             success: true,
             message: "Video Details Updated Successfully!",
             video,
         })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// deleteVideoById
+export const deleteVideoById = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+
+        const video = await Video.findById(videoId);
+        if (video.userId.toString() !== userId.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: "You are not allowed to delete this video!",
+            });
+        }
+
+        video.isDelete = true;
+
+        await video.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Video Deleted Successfully!",
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// restoreVideoById
+export const restoreVideoById = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+
+        const video = await Video.findById(videoId);
+        if (video.userId.toString() !== userId.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: "You are not allowed to delete this video!",
+            });
+        }
+
+        video.isDelete = false;
+
+        await video.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Video Restored Successfully!",
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// getVideoById
+export const getVideoById = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+
+        const video = await Video.findById(videoId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Video fetched by Id!",
+            video,
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// increaseVideoView
+export const increaseVideoView = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+
+        if (!userId) {
+            return res.status(200).json({
+                success: true,
+                message: "View count not updated (User not logged in).",
+            });
+        }
+
+        const video = await Video.findById(videoId);
+
+        if (!video.viewedBy.includes(userId)) {
+            video.views += 1;
+            video.viewedBy.push(userId);
+            await video.save();
+
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Video Count Updated!",
+            video,
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// trendingVideos
+export const trendingVideos = async (req, res) => {
+    try {
+
+        const videos = await Video.find({ isDelete: false }).sort({ views: -1, likes: -1, createdAt: -1 }).limit(20);
+
+        return res.status(200).json({
+            success: true,
+            message: "Trending Videos!",
+            videos,
+        });
 
 
     } catch (error) {
