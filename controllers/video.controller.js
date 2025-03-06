@@ -1,6 +1,7 @@
 import Video from "../models/video.model.js";
 import cloudinary from '../config/cloudinary.js';
 import fs from "fs";
+import User from "../models/user.model.js";
 
 
 // const uploadFromBuffer = async (buffer) => {
@@ -459,6 +460,174 @@ export const trendingVideos = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// getVideosByCategory
+export const getVideosByCategory = async (req, res) => {
+    try {
+        const category = req.params.category;
+
+        const videos = await Video.find({ category: category.toLowerCase(), isDelete: false }).sort({ createdAt: -1 });
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Catgeory Videos Found!",
+            total: videos.length,
+            videos,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getVideosByCategory API!",
+        });
+    }
+}
+
+// likeDislikeVideo
+export const likeUnlikeVideo = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+        if (!videoId) {
+            return res.status(400).json({
+                success: false,
+                message: "Video Not Found!",
+            });
+        }
+
+        const video = await Video.findOne({ _id: videoId, isDelete: false });
+        console.log("67c87c83b6fdb77f92ba08f8", video);
+
+        if (!video.likes.includes(userId)) {
+            // like
+            await Video.findByIdAndUpdate(
+                videoId,
+                {
+                    $push: { likes: userId }
+                },
+                { new: true }
+            );
+
+            await User.findByIdAndUpdate(
+                userId,
+                {
+                    $push: { likedVideos: videoId },
+                },
+                { new: true },
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: `You liked this Video!`,
+            });
+        } else {
+            // unlike
+            await Video.findByIdAndUpdate(
+                videoId,
+                {
+                    $pull: { likes: userId }
+                },
+                { new: true }
+            );
+
+            await User.findByIdAndUpdate(
+                userId,
+                {
+                    $pull: { likedVideos: videoId },
+                },
+                { new: true },
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: `You Unliked this Video!`,
+            });
+        }
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in likeUnlikeVideo API!",
+        });
+    }
+}
+
+// dislikeUndislikeVideo
+export const dislikeUndislikeVideo = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+        if (!videoId) {
+            return res.status(400).json({
+                success: false,
+                message: "Video Not Found!",
+            });
+        }
+
+        const video = await Video.findOne({ _id: videoId, isDelete: false });
+        console.log("67c87c83b6fdb77f92ba08f8", video);
+
+        if (!video.dislikes.includes(userId)) {
+            // dislike
+            await Video.findByIdAndUpdate(
+                videoId,
+                {
+                    $push: { dislikes: userId }
+                },
+                { new: true }
+            );
+
+            await User.findByIdAndUpdate(
+                userId,
+                {
+                    $push: { dislikedVideos: videoId },
+                },
+                { new: true },
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: `You Unliked this Video!`,
+            });
+        } else {
+            // unlike
+            await Video.findByIdAndUpdate(
+                videoId,
+                {
+                    $pull: { dislikes: userId }
+                },
+                { new: true }
+            );
+
+            await User.findByIdAndUpdate(
+                userId,
+                {
+                    $pull: { dislikedVideos: videoId },
+                },
+                { new: true },
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: `You Undisliked this Video!`,
+            });
+        }
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in likeUnlikeVideo API!",
         });
     }
 }
