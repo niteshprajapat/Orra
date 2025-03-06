@@ -1,5 +1,5 @@
 import express from "express";
-import { createVideo, deleteThumbnail, getAllVideos, getAllVideosOfUserByUserId, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
+import { createVideo, deleteThumbnail, deleteVideoById, getAllVideos, getAllVideosOfUserByUserId, getVideoById, increaseVideoView, restoreVideoById, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import upload from '../middlewares/multer.js';
 
@@ -15,6 +15,11 @@ router.delete("/delete-thumbnail/:videoId", isAuthenticated, deleteThumbnail);
 
 router.put("/update-videoUrl/:videoId", isAuthenticated, upload.single("video"), updateVideoUrl);
 router.put("/update-video-details/:videoId", isAuthenticated, updateVideoDetails);
+router.delete("/delete-video/:videoId", isAuthenticated, deleteVideoById);
+router.put("/restore-video/:videoId", isAuthenticated, restoreVideoById);
+router.get("/get-video/:videoId", isAuthenticated, getVideoById);
+router.get("/view-video/:videoId", isAuthenticated, increaseVideoView);
+router.get("/trending-videos", isAuthenticated, trendingVideos);
 
 
 router.get("/get-all-videos-of-user/:userId", isAuthenticated, getAllVideosOfUserByUserId);
