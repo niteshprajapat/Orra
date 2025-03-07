@@ -1,5 +1,5 @@
 import express from "express";
-import { createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllVideos, getAllVideosOfUserByUserId, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, restoreVideoById, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
+import { createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, restoreVideoById, searchVideo, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import upload from '../middlewares/multer.js';
 
@@ -23,6 +23,9 @@ router.get("/trending-videos", isAuthenticated, trendingVideos);
 router.get("/category-videos/:category", isAuthenticated, getVideosByCategory);
 router.get("/like-unlike-video/:videoId", isAuthenticated, likeUnlikeVideo);
 router.get("/dislike-undislike-video/:videoId", isAuthenticated, dislikeUndislikeVideo);
+
+router.get("/search-video", isAuthenticated, searchVideo);
+router.get("/recommended/:videoId", isAuthenticated, getRecommendedVideos);
 
 
 router.get("/get-all-videos-of-user/:userId", isAuthenticated, getAllVideosOfUserByUserId);
