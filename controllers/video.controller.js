@@ -632,6 +632,98 @@ export const dislikeUndislikeVideo = async (req, res) => {
     }
 }
 
+// searchVideo
+export const searchVideo = async (req, res) => {
+    try {
+        const query = req.query.query;
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                message: "Search Query is Required!"
+            });
+        }
+
+        const videos = await Video.find({
+            $and: [
+                { isDelete: false },
+                { visibility: "public" },
+                {
+                    $or: [
+                        { title: { $regex: query, $options: 'i' } },
+                        { tags: { $regex: query, $options: 'i' } },
+                        { category: { $regex: query, $options: 'i' } },
+                    ],
+                },
+            ],
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched Searched Videos",
+            total: videos.length,
+            videos,
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in searchVideo API!",
+        });
+    }
+}
+
+// getRecommendedVideos
+export const getRecommendedVideos = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const { limit = 10, page = 1 } = req.query; // Pagination support
+
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(400).json({
+                success: false,
+                message: "Video Not Found!",
+            });
+        }
+
+
+        const recommendedVideos = await Video.find({
+            $and: [
+                { isDelete: false },
+                { visibility: "public" },
+                { _id: { $ne: videoId } },
+                {
+                    $or: [
+                        { category: video.category },
+                        { tags: { $in: video.tags } },
+                        { title: { $regex: video.title.split(" ")[0], $options: "i" } }
+                    ]
+                }
+            ]
+        }).sort({ views: -1, likes: -1, createdAt: -1 }).skip((page - 1) * limit).limit(Number(limit))
+
+        return res.status(200).json({
+            success: true,
+            message: "Recommended Videos!",
+            total: recommendedVideos.length,
+            recommendedVideos,
+        });
+
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in searchVideo API!",
+        });
+    }
+}
+
 
 
 // ADMIN Routes
