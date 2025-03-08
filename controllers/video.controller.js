@@ -678,7 +678,7 @@ export const searchVideo = async (req, res) => {
 export const getRecommendedVideos = async (req, res) => {
     try {
         const videoId = req.params.videoId;
-        const { limit = 10, page = 1 } = req.query; // Pagination support
+        const { limit = 10, page = 1 } = req.query;
 
         const video = await Video.findById(videoId);
         if (!video) {
