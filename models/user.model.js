@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true, // Allows null values while enforcing uniqueness
     },
+github
     isDelete: {
         type: Boolean,
         default: false,
