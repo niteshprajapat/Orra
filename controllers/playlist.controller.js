@@ -1,5 +1,6 @@
 import Playlist from "../models/playlist.model.js";
 import Video from "../models/video.model.js";
+import User from "../models/user.model.js";
 import cloudinary from "../config/cloudinary.js";
 import fs from 'fs';
 
@@ -276,7 +277,7 @@ export const getAllPlaylistsByUserId = async (req, res) => {
         const playlists = await Playlist.find({ isDelete: false, userId: userId });
 
         if (!playlists) {
-            return res.status(440).json({
+            return res.status(404).json({
                 success: false,
                 message: "Playlists Not Found for this User!",
             });
@@ -285,7 +286,8 @@ export const getAllPlaylistsByUserId = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Fetched playlist by Id!",
+            message: "Fetched all playlists of User!",
+            total: playlists.length,
             playlists,
         });
 
@@ -296,6 +298,242 @@ export const getAllPlaylistsByUserId = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error in createPlaylist API"
+        })
+    }
+}
+
+// getAllPublicPlaylists
+export const getAllPublicPlaylists = async (req, res) => {
+    try {
+
+        const playlists = await Playlist.find({ visibility: "public" }).sort({ createdAt: -1 });
+
+        if (!playlists) {
+            return res.status(404).json({
+                success: false,
+                message: "Playlists Not Found for this User!",
+            });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched all public playlists!",
+            total: playlists.length,
+            playlists,
+        });
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPlaylist API"
+        })
+    }
+}
+
+// export const getAllPublicPlaylists = async (req, res) => {
+//     try {
+//         const { page = 1, limit = 10, sortBy = "createdAt", order = "desc" } = req.query;
+
+//         const skip = (page - 1) * limit;
+
+//         // Fetch public playlists with pagination & sorting
+//         const playlists = await Playlist.find({ visibility: "public" })
+//             .sort({ [sortBy]: order === "asc" ? 1 : -1 }) // Sorting
+//             .skip(skip) // Pagination: Skip previous pages
+//             .limit(parseInt(limit)); // Limit per page
+
+//         // Get total count for pagination info
+//         const totalPlaylists = await Playlist.countDocuments({ visibility: "public" });
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Fetched all public playlists!",
+//             totalPlaylists,
+//             currentPage: parseInt(page),
+//             totalPages: Math.ceil(totalPlaylists / limit),
+//             playlists,
+//         });
+
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Error fetching public playlists!",
+//         });
+//     }
+// };
+
+
+
+// deletePlaylistById
+export const deletePlaylistById = async (req, res) => {
+    try {
+        const playlistId = req.params.playlistId;
+
+        if (!playlistId) {
+            return res.status(404).json({
+                success: false,
+                message: "PlaylistId is Required!",
+            });
+        }
+
+        const playlist = await Playlist.findOne({ _id: playlistId, isDelete: false });
+
+        playlist.isDelete = true;
+
+        await playlist.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Playlist Deleted Successfully!",
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPlaylist API"
+        })
+    }
+}
+
+// changeVisibilityofPlaylistById
+export const changeVisibilityofPlaylistById = async (req, res) => {
+    try {
+        const playlistId = req.params.playlistId;
+        const { visibility } = req.body;
+
+
+        if (!playlistId || !visibility) {
+            return res.status(404).json({
+                success: false,
+                message: "All fields are Required!",
+            });
+        }
+
+
+        const playlist = await Playlist.findById(playlistId);
+
+        if (playlist.visibility) {
+            playlist.visibility = visibility;
+        }
+
+        await playlist.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Playlist Visibility Changed Successfully!",
+            playlist,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPlaylist API"
+        })
+    }
+}
+
+
+// updatePlaylistById
+export const updatePlaylistById = async (req, res) => {
+    try {
+        const playlistId = req.params.playlistId;
+        const { title } = req.body;
+
+
+        if (!playlistId) {
+            return res.status(404).json({
+                success: false,
+                message: "All fields are Required!",
+            });
+        }
+
+
+        const playlist = await Playlist.findById(playlistId);
+
+        if (playlist.title) {
+            playlist.title = title;
+        }
+
+        await playlist.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Playlist Updated Successfully!",
+            playlist,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPlaylist API"
+        })
+    }
+}
+
+// searchPlaylists
+export const searchPlaylists = async (req, res) => {
+    try {
+        const { query, page = 1, limit = 10, sortBy = "createdAt", order = "desc" } = req.query;
+        const skip = (page - 1) * limit;
+
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                message: "Search query is required!",
+            });
+        }
+
+        const searchQuery = {
+            $or: [
+                { title: { $regex: query, $options: "i" } },
+            ]
+        }
+
+        // if (query.match(/^[0-9a-fA-F]{24}$/)) {
+        //     searchQuery.$or.push({ userId: query })
+        // } else {
+        //     const users = await User.find({ username: { $regex: query, $options: "i" } }).select("_id");
+
+        //     if (users.length > 0) {
+        //         searchQuery.$or.push({ userId: { $in: users.map(user => user._id) } });
+        //     }
+        // }
+
+        // Search for users with matching username
+        const users = await User.find({ username: { $regex: query, $options: "i" } }).select("_id");
+
+        if (users.length > 0) {
+            searchQuery = { $or: [{ title: { $regex: query, $options: "i" } }, { userId: { $in: users.map(user => user._id) } }] };
+        }
+
+        const playlists = await Playlist.find(searchQuery)
+            .sort({ [sortBy]: order === "asc" ? 1 : -1 }) // Sorting
+            .skip(skip) // Pagination
+            .limit(parseInt(limit));
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Search results for playlists",
+            total: playlists.length,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(playlists.length / limit),
+            playlists,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in searchPlaylists API"
         })
     }
 }
