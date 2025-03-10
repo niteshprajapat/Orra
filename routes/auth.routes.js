@@ -21,7 +21,6 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/change-password", isAuthenticated, changePassword);
 
-
 // Google OAuth Routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
@@ -39,5 +38,22 @@ router.get(
     }
 );
 
+
+// Github OAuth Routes
+router.get("/github", passport.authenticate("github", { scope: ["user:email"] }));
+
+router.get("/github/callback", passport.authenticate("github", { failureRedirect: "http://localhost:3000/login", session: false }),
+    (req, res) => {
+        const user = req.user;
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "7d",
+        });
+
+        // res.redirect(`http://localhost:3000?token=${token}`);
+        res.redirect(`http://localhost:5000?token=${token}`);
+
+    }
+
+)
 
 export default router;
