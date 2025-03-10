@@ -25,7 +25,11 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true, // Allows null values while enforcing uniqueness
     },
-github
+    githubId: {
+        type: String, // Stores the GitHub ID for OAuth users
+        unique: true,
+        sparse: true,
+    },
     isDelete: {
         type: Boolean,
         default: false,
