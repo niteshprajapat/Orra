@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js";
 import crypto from 'crypto';
 import { updateEmailRequest, verifyEmailUpdateEmail } from "../utils/emailHandler.js";
 import cloudinary from '../config/cloudinary.js';
@@ -235,6 +236,14 @@ export const subscribeUser = async (req, res) => {
             );
 
             await User.findByIdAndUpdate(userId, { $push: { subscribers: loggedInUserId } }, { new: true });
+
+            const notification = await Notification.create({
+                sender: loggedInUserId,
+                receiver: userId,
+                type: "subscription",
+            });
+
+            await notification.save();
 
             return res.status(200).json({
                 success: true,
