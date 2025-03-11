@@ -10,6 +10,7 @@ const notificationSchema = new mongoose.Schema({
     sender: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        required: true,
     },
     type: {
         type: String,
@@ -33,7 +34,7 @@ const notificationSchema = new mongoose.Schema({
         enum: ['high', 'medium', 'low'],
         default: 'medium'
     },
-    isDelete: {
+    isDeleted: {
         type: Boolean,
         default: false,
     },
