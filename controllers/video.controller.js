@@ -1,7 +1,9 @@
 import Video from "../models/video.model.js";
+import User from "../models/user.model.js";
+import WatchHistory from "../models/watchHistory.model.js";
+import Notification from "../models/notification.model.js";
 import cloudinary from '../config/cloudinary.js';
 import fs from "fs";
-import User from "../models/user.model.js";
 
 
 // const uploadFromBuffer = async (buffer) => {
@@ -98,6 +100,26 @@ export const createVideo = async (req, res) => {
             },
             tags: data,
         });
+
+        const uploader = await User.findById(userId).populate({
+            path: "subscribers",
+            select: "-password",
+        });
+        console.log("uploader", uploader);
+
+        if (uploader && uploader.subscribers.length > 0) {
+            const notifications = uploader.subscribers.map((subscriberId) => ({
+                sender: userId,
+                receiver: subscriberId,
+                type: "upload",
+                videoId: video._id,
+                priority: "high",
+            }));
+
+            await Notification.insertMany(notifications);
+
+            console.log("Notifications send to all Subscribers!");
+        }
 
 
         return res.status(201).json({
@@ -422,8 +444,25 @@ export const increaseVideoView = async (req, res) => {
         if (!video.viewedBy.includes(userId)) {
             video.views += 1;
             video.viewedBy.push(userId);
-            await video.save();
 
+            let userWatchHistory = await WatchHistory.findOne({ userId: userId });
+
+            if (!userWatchHistory) {
+                userWatchHistory = await WatchHistory.create({
+                    userId: userId,
+                    videos: [{ videoId }],
+                })
+            } else {
+                const existingVideo = userWatchHistory.videos.find((v) => v.videoId.toString() === videoId.toString());
+                if (existingVideo) {
+                    existingVideo.watchedAt = new Date();
+                } else {
+                    userWatchHistory.videos.push({ videoId });
+                }
+            }
+
+            await userWatchHistory.save();
+            await video.save();
         }
 
         return res.status(200).json({
@@ -520,6 +559,18 @@ export const likeUnlikeVideo = async (req, res) => {
                 },
                 { new: true },
             );
+
+
+            if (video.userId.toString() !== userId.toString()) {
+                const notification = await Notification.create({
+                    receiver: video.userId,
+                    sender: userId,
+                    type: "like",
+                    videoId: videoId,
+                    priority: "high",
+                });
+            }
+
 
             return res.status(200).json({
                 success: true,
