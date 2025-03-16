@@ -10,7 +10,28 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import videoRoutes from './routes/video.routes.js';
+import playlistRoutes from './routes/playlist.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import watchHistoryRoutes from './routes/watchHistory.routes.js';
 import './config/passport.js';
+
+
+/**
+ * 
+ * 
+ * Build feature like save to library just like youtube have.
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+
+
+
+
 
 // config
 dotenv.config({});
@@ -49,6 +70,10 @@ app.use(passport.session());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/videos", videoRoutes);
+app.use("/api/v1/playlists", playlistRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/watchHistory", watchHistoryRoutes);
 
 
 
