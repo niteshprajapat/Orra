@@ -158,7 +158,14 @@ const userSchema = new mongoose.Schema({
     emailVerificationToken: { type: String },
     emailVerificationTokenExpires: { type: Date },
 
-
+    isSubscribed: {
+        type: Boolean,
+        default: false,
+    },
+    subscriptionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subscription",
+    },
 
 
 }, { timestamps: true });
