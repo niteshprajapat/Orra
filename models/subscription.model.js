@@ -6,14 +6,19 @@ const subscriptionSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
+    stripeCustomerId: {
+        type: String,
+        unique: true,
+    },
     stripeSubscriptionId: {
         type: String,
         required: true,
         unique: true,
     },
+
     status: {
         type: String,
-        enum: ["active", "canceled", "expired"],
+        enum: ["active", "canceled", "expired", "paused"],
         default: "active",
     },
     currentPeriodStart: {
