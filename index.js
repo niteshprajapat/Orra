@@ -12,6 +12,7 @@ import userRoutes from './routes/user.routes.js';
 import videoRoutes from './routes/video.routes.js';
 import playlistRoutes from './routes/playlist.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import watchHistoryRoutes from './routes/watchHistory.routes.js';
 import './config/passport.js';
 
@@ -74,6 +75,7 @@ app.use("/api/v1/playlists", playlistRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/watchHistory", watchHistoryRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 
 
