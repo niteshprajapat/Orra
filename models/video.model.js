@@ -83,6 +83,28 @@ const videoSchema = new mongoose.Schema({
             ref: "Comment",
         }
     ],
+    reports: [
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
+            reason: {
+                type: String,
+                enum: ["spam", "misleading", "harmful", "violence", "hate_speech", "copyright", "other"],
+                required: true,
+            },
+            message: {
+                type: String
+            },
+            reportedAt: {
+                type: Date,
+                default: Date.now,
+            },
+        }
+    ]
+
 
 
 
