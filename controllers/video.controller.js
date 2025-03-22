@@ -775,6 +775,58 @@ export const getRecommendedVideos = async (req, res) => {
     }
 }
 
+// reportVideoById
+export const reportVideoById = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const { reason, message } = req.body;
+        const userId = req.user._id;
+
+        if (!reason) {
+            return res.status(400).json({
+                success: false,
+                message: "Reason is Required!",
+            });
+        }
+
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(404).json({
+                success: false,
+                message: "Video Not Found!",
+            });
+        }
+
+        const alreadyReported = video.reports.some((report) => report.userId.toString() === userId.toString());
+
+        if (alreadyReported) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already reported this video!",
+            });
+        }
+
+        video.reports.push({ userId, reason, message });
+        await video.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Video reported Successfully!",
+        });
+
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in searchVideo API!",
+        });
+    }
+}
+
 
 
 // ADMIN Routes
@@ -798,6 +850,7 @@ export const getAllVideos = async (req, res) => {
         });
     }
 }
+
 
 
 
