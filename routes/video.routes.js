@@ -1,5 +1,5 @@
 import express from "express";
-import { createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, restoreVideoById, searchVideo, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
+import { createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, reportVideoById, restoreVideoById, searchVideo, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import upload from '../middlewares/multer.js';
 
@@ -30,6 +30,8 @@ router.get("/recommended/:videoId", isAuthenticated, getRecommendedVideos);
 
 router.get("/get-all-videos-of-user/:userId", isAuthenticated, getAllVideosOfUserByUserId);
 
+// report video
+router.post("/report-video/:videoId", isAuthenticated, reportVideoById);
 
 // ADMIN Routes
 
