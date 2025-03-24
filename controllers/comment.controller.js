@@ -155,3 +155,42 @@ export const updateCommentByCommentId = async (req, res) => {
         });
     }
 }
+
+// deleteCommentByCommentId
+export const deleteCommentByCommentId = async (req, res) => {
+    try {
+        const commentId = req.params.commentId;
+        const userId = req.user._id;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(400).json({
+                success: false,
+                message: "Comment Not Found by Id",
+            });
+        }
+
+        if (comment.userId.toString() !== userId.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: "You cant delete this comment!",
+            });
+        }
+
+
+        comment.isDelete = true;
+        await comment.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Comment Deleted Successfully!",
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createComment API!"
+        });
+    }
+}
