@@ -14,6 +14,7 @@ import playlistRoutes from './routes/playlist.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import watchHistoryRoutes from './routes/watchHistory.routes.js';
+import commentRoutes from './routes/comment.routes.js';
 import './config/passport.js';
 
 
@@ -28,10 +29,6 @@ import './config/passport.js';
  * 
  * 
  */
-
-
-
-
 
 
 // config
@@ -76,6 +73,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/watchHistory", watchHistoryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/comments", commentRoutes);
 
 
 
