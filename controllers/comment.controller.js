@@ -194,3 +194,163 @@ export const deleteCommentByCommentId = async (req, res) => {
         });
     }
 }
+
+// likeUnlikeCommentByCommentId
+export const likeUnlikeCommentByCommentId = async (req, res) => {
+    try {
+        const commentId = req.params.commentId;
+        const userId = req.user._id;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: "Comment Not Found!",
+            });
+        }
+
+        if (!comment.likes.includes(userId)) {
+            // like 
+
+            await Comment.findByIdAndUpdate(
+                commentId,
+                {
+                    $push: { likes: userId },
+                },
+                {
+                    new: true,
+                }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Comment liked Successfully!",
+            });
+
+        } else {
+            // unlike
+
+            await Comment.findByIdAndUpdate(
+                commentId,
+                {
+                    $pull: { likes: userId },
+                },
+                {
+                    new: true,
+                }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Comment Unliked Successfully!",
+            });
+        }
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createComment API!"
+        });
+    }
+}
+
+// dislikeUndislikeCommentByCommentId
+export const dislikeUndislikeCommentByCommentId = async (req, res) => {
+    try {
+        const commentId = req.params.commentId;
+        const userId = req.user._id;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: "Comment Not Found!",
+            });
+        }
+
+        if (!comment.dislikes.includes(userId)) {
+            // dislike 
+
+            await Comment.findByIdAndUpdate(
+                commentId,
+                {
+                    $push: { dislikes: userId },
+                },
+                {
+                    new: true,
+                }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Comment disliked Successfully!",
+            });
+
+        } else {
+            // undislike
+
+            await Comment.findByIdAndUpdate(
+                commentId,
+                {
+                    $pull: { dislikes: userId },
+                },
+                {
+                    new: true,
+                }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Comment Undisliked Successfully!",
+            });
+        }
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createComment API!"
+        });
+    }
+}
+
+// getAllCommentsByUser
+export const getAllCommentsByUser = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        if (!userId) {
+            return res.status(404).json({
+                success: false,
+                message: "UserId Not Found!"
+            })
+        }
+
+        const comments = await Comment.find({ userId, isDelete: false }).populate({
+            path: "videoId",
+            select: "title thumbnail.url"
+        })
+        if (!comments) {
+            return res.status(404).json({
+                success: false,
+                message: "Comments Not Found!",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched All Comments by UserId Successfully!",
+            comments,
+        });
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createComment API!"
+        });
+    }
+}
