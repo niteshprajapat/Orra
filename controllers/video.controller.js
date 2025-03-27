@@ -267,17 +267,72 @@ export const getAllVideosOfUserByUserId = async (req, res) => {
     try {
         const userId = req.params.userId;
 
-        const videos = await Video.find({ userId: userId, isDelete: false }).lean();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
+        const videos = await Video.find({ userId: userId, isDelete: false }).skip(skip).limit(limit).lean();
+
+        const total = await Video.countDocuments({ userId: userId, isDelete: false });
+        const totalPages = Math.ceil(total / limit);
 
 
         return res.status(200).json({
             success: true,
             message: "Video Updated Successfully!",
-            total: videos.length,
+            totalVideos: videos.length,
+            page,
+            totalPages,
             videos,
         })
 
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in deleteThumbnail API!",
+        });
+    }
+}
+
+// getAllVideosOfUserByUserId
+export const changeVisibilityOfVideoByVideoId = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const { visibility } = req.body;
+
+        if (!videoId || !visibility) {
+            return res.status(404).json({
+                success: false,
+                message: "All fields are required!",
+            });
+        }
+
+        if (!["public", "private", "unlisted"].includes(visibility)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid visibility! Use 'public', 'private', or 'unlisted'",
+            });
+        }
+
+        const video = await Video.findOne({ _id: videoId, isDelete: false });
+
+        if (video.status === "banned" && visibility !== "private") {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot change visibility of banned video to anything other than private!",
+            });
+        }
+
+        video.visibility = visibility;
+        await video.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `Video visibility updated to ${visibility}`,
+            video,
+        });
 
     } catch (error) {
         console.log(error);
@@ -840,6 +895,138 @@ export const getAllVideos = async (req, res) => {
             success: false,
             message: "Fetched All Videos",
             videos,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createVideo API!",
+        });
+    }
+}
+
+// getAllDeletedVideos
+export const getAllDeletedVideos = async (req, res) => {
+    try {
+        const videos = await Video.find({ isDelete: true });
+
+        return res.status(200).json({
+            success: false,
+            message: "Fetched All Deleted Videos",
+            videos,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createVideo API!",
+        });
+    }
+}
+
+// getAllReportedVideos
+export const getAllReportedVideos = async (req, res) => {
+    try {
+        const videos = await Video.find({ "reports.0": { $exists: true } });
+        return res.status(200).json({
+            success: false,
+            message: "Fetched All Deleted Videos",
+            videos,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createVideo API!",
+        });
+    }
+}
+
+// banVideoByVideoId
+export const banVideoByVideoId = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        if (!videoId) {
+            return res.status(404).json({
+                success: false,
+                message: "VideoId Not Found!",
+            });
+        }
+
+        const video = await Video.findOne({ _id: videoId, isDelete: false });
+
+        if (video.status === "banned") {
+            return res.status(400).json({
+                success: false,
+                message: "Video is already Banned",
+            });
+        }
+
+        video.status = "banned";
+        video.visibility = "private";
+        await video.save();
+
+        const notification = await Notification.create({
+            receiver: video.userId,
+            sender: req.user._id,
+            type: "video_banned",
+            videoId,
+            priority: "high",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Video has been banned successfully!",
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createVideo API!",
+        });
+    }
+}
+
+// unbanVideoByVideoId
+export const unbanVideoByVideoId = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        if (!videoId) {
+            return res.status(404).json({
+                success: false,
+                message: "VideoId Not Found!",
+            });
+        }
+
+        const video = await Video.findOne({ _id: videoId, isDelete: false });
+
+        if (video.status !== "banned") {
+            return res.status(400).json({
+                success: false,
+                message: "Video is not Banned",
+            });
+        }
+
+        video.status = "active";
+        video.visibility = "public";
+        await video.save();
+
+        const notification = await Notification.create({
+            receiver: video.userId,
+            sender: req.user._id,
+            type: "video_unbanned",
+            videoId,
+            priority: "high",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Video has been unbanned successfully!",
         });
 
     } catch (error) {
