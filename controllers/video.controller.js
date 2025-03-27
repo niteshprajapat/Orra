@@ -851,6 +851,176 @@ export const getAllVideos = async (req, res) => {
     }
 }
 
+// getVideoAnalytics for single video
+export const getVideoAnalytics = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+        const userId = req.user._id;
+
+        const { startDate, endDate, page = 1, limit = 10 } = req.query;
+
+        const video = await Video.findOne({ _id: videoId, userId, isDelete: false });
+        if (!video) {
+            return res.status(404).json({
+                success: false,
+                message: "Video not found or you don't have access!",
+            });
+        }
+
+        // Date filter for watch history
+        const dateFilter = {};
+        if (startDate) {
+            dateFilter.$gte = new Date(startDate);
+        }
+        if (endDate) {
+            dateFilter.$lte = new Date(endDate);
+        }
+
+
+        // Fetch watch history for detailed analytics
+        const watchHistory = await WatchHistory.aggregate([
+            {
+                $match: {
+                    "videos.videoId": videoId,
+                }
+            },
+            {
+                $unwind: "$videos"
+            },
+            {
+                $match: {
+                    "videos.videoId": videoId,
+                }
+            },
+            dateFilter ? {
+                $match: {
+                    "videos.watchedAt": dateFilter
+                }
+            } : {
+                $match: {}
+            },
+            {
+                $group: {
+                    _id: "$userId",
+                    totalWatchTime: { $sum: "$videos.duration" },
+                    lastWatched: { $max: "$videos.watchedAt" },
+                },
+            },
+            {
+                $sort: {
+                    lastWatched: -1,
+                }
+            },
+            {
+                $skip: (page - 1) * limit,
+            },
+            {
+                $limit: parseInt(limit),
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                        {
+                            $project: { fullname: 1, username: 1 },
+                        }
+                    ],
+                },
+            },
+            {
+                $unwind: "$user",
+            },
+            {
+                $project: {
+                    user: "$user",
+                    totalWatchTime: 1,
+                    lastWatched: 1,
+                },
+            },
+        ]);
+
+        // Total watch history records for pagination
+        const totalWatchRecords = await WatchHistory.aggregate([
+            {
+                $match: { "videos.videoId": videoId },
+            },
+            {
+                $unwind: "$videos",
+            },
+            {
+                $match: { "videos.videoId": videoId },
+            },
+            dateFilter ? {
+                $match: {
+                    "videos.watchedAt": dateFilter
+                }
+            } : {
+                $match: {}
+            },
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 }
+                }
+            },
+        ]);
+
+        // Total Stats from watch history
+        const totalWatchStats = await WatchHistory.aggregate([
+            { $match: { "videos.videoId": new mongoose.Types.ObjectId(videoId) } },
+            { $unwind: "$videos" },
+            { $match: { "videos.videoId": new mongoose.Types.ObjectId(videoId) } },
+            dateFilter ? { $match: { "videos.watchedAt": dateFilter } } : { $match: {} },
+            {
+                $group: {
+                    _id: null,
+                    totalWatchTime: { $sum: "$videos.duration" },
+                    uniqueViewers: { $addToSet: "$userId" },
+                },
+            },
+        ]);
+
+        const totalStats = totalWatchStats[0] || {
+            totalWatchTime: video.watchTime,
+            uniqueViewers: video.viewedBy,
+        };
+
+        return res.status(200).json({
+            success: true,
+            message: "Video analytics fetched successfully!",
+            data: {
+                video: {
+                    title: video.title,
+                    views: video.views,
+                    watchTime: totalStats.totalWatchTime,
+                    likes: video.likes.length,
+                    dislikes: video.dislikes.length,
+                    uniqueViewers: totalStats.uniqueViewers.length,
+                    createdAt: video.createdAt,
+                    updatedAt: video.updatedAt,
+                },
+                watchHistory: watchHistory,
+            },
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil((totalWatchRecords[0]?.count || 0) / limit),
+                totalRecords: totalWatchRecords[0]?.count || 0,
+            },
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getVideoAnalytics API!",
+        });
+    }
+}
+
 
 
 
