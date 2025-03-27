@@ -1,5 +1,5 @@
 import express from "express";
-import { createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, reportVideoById, restoreVideoById, searchVideo, trendingVideos, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
+import { banVideoByVideoId, changeVisibilityOfVideoByVideoId, createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllDeletedVideos, getAllReportedVideos, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoAnalytics, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, reportVideoById, restoreVideoById, searchVideo, trendingVideos, unbanVideoByVideoId, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import upload from '../middlewares/multer.js';
 
@@ -29,14 +29,23 @@ router.get("/recommended/:videoId", isAuthenticated, getRecommendedVideos);
 
 
 router.get("/get-all-videos-of-user/:userId", isAuthenticated, getAllVideosOfUserByUserId);
+router.put("/change-visibility-of-video/:videoId", isAuthenticated, changeVisibilityOfVideoByVideoId);
+
 
 // report video
 router.post("/report-video/:videoId", isAuthenticated, reportVideoById);
 
 // ADMIN Routes
 
+router.get("/admin/get-all-video", isAuthenticated, isAdmin, getAllVideos);
+router.get("/admin/get-all-deleted-videos", isAuthenticated, isAdmin, getAllDeletedVideos);
+router.get("/admin/get-all-reported-videos", isAuthenticated, isAdmin, getAllReportedVideos);
+router.get("/admin/get-all-reported-videos", isAuthenticated, isAdmin, getAllReportedVideos);
+router.get("/admin/ban-video/:videoId", isAuthenticated, isAdmin, banVideoByVideoId);
+router.get("/admin/unban-video/:videoId", isAuthenticated, isAdmin, unbanVideoByVideoId);
 
-router.get("/get-all-video", isAuthenticated, getAllVideos);
+router.get("/video/:videoId/analytics", isAuthenticated, getVideoAnalytics);
+
 
 
 export default router;
