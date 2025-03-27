@@ -55,6 +55,11 @@ const videoSchema = new mongoose.Schema({
         enum: ["public", "private", "unlisted"],
         default: "public",
     },
+    status: {
+        type: String,
+        enum: ["active", "banned"],
+        default: "active",
+    },
     likes: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -103,7 +108,19 @@ const videoSchema = new mongoose.Schema({
                 default: Date.now,
             },
         }
-    ]
+    ],
+
+    watchTime: {
+        type: Number,
+        default: 0
+    },
+    dailyStats: [{
+        date: { type: Date, required: true },
+        views: { type: Number, default: 0 },
+        watchTime: { type: Number, default: 0 },
+        likes: { type: Number, default: 0 },
+        dislikes: { type: Number, default: 0 },
+    }],
 
 
 
