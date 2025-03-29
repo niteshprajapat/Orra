@@ -14,7 +14,7 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['like', 'comment', 'subscription', 'upload', 'reply', 'video_banned', 'video_unbanned'],
+        enum: ['like', 'comment', 'subscription', 'upload', 'reply', 'video_banned', 'video_unbanned', 'user_banned', 'user_suspended', 'user_activated'],
         required: true,
     },
     videoId: {
