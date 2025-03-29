@@ -1,5 +1,8 @@
 import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
+import Video from "../models/video.model.js";
+import Comment from "../models/comment.model.js";
+import WatchHistory from "../models/watchHistory.model.js";
 import crypto from 'crypto';
 import { updateEmailRequest, verifyEmailUpdateEmail } from "../utils/emailHandler.js";
 import cloudinary from '../config/cloudinary.js';
@@ -848,6 +851,159 @@ export const changeStatus = async (req, res) => {
         })
 
 
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in changeStatus API!",
+        });
+    }
+}
+
+// forceDeleteUserByUserId
+export const forceDeleteUserByUserId = async (req, res) => {
+    try {
+
+        const userId = req.params.userId;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User Not Found!",
+            });
+        }
+
+        // user user's videos and associate data
+        const videos = await Video.find({ userId });
+
+        for (const video of videos) {
+            if (video.videoUrl.public_id) {
+                await cloudinary.uploader.destroy(video.videoUrl.public_id, {
+                    resource_type: "video",
+                })
+            }
+
+            if (video.thumbnail.public_id) {
+                await cloudinary.uploader.destroy(video.thumbnail.public_id, {
+                    resource_type: "image",
+                });
+            }
+
+            await Comment.deleteMany({ videoId: video._id });
+            await Notification.deleteMany({ videoId: video._id });
+            await WatchHistory.updateMany(
+                { "videos.videoId": video._id },
+                {
+                    $pull: {
+                        videos: {
+                            videoId: video._id
+                        }
+                    }
+                }
+            );
+
+            await video.save();
+        }
+
+
+        if (user.profilePicture.public_id) {
+            await cloudinary.uploader.destroy(user.profilePicture.public_id)
+        }
+        if (user.coverImage.public_id) {
+            await cloudinary.uploader.destroy(user.coverImage.public_id)
+        }
+
+
+        await Comment.deleteMany({ userId });
+        await Notification.deleteMany({
+            $or: [
+                { sender: userId },
+                { receiver: userId }
+            ],
+        });
+        await WatchHistory.deleteMany({ userId });
+
+        await User.updateMany(
+            { subscribedTo: userId },
+            {
+                $pull: { subscribedTo: userId }
+            }
+        );
+
+        await User.findByIdAndDelete(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: "User and all associated data permanently deleted",
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in changeStatus API!",
+        });
+    }
+}
+
+// bulkChangeUserStatus
+export const bulkChangeUserStatus = async (req, res) => {
+    try {
+
+        const { userIds, status } = req.body;
+
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "User IDs array is required!"
+            });
+        }
+
+        if (!["active", "suspended", "banned"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status! Use 'active', 'banned', or 'suspended'",
+            });
+        }
+
+
+        const updatedData = await User.updateMany(
+            {
+                _id: { $in: userIds },
+                status: { $ne: status },
+                isDelete: false,
+            },
+            {
+                $set: { status }
+            }
+        );
+
+        // Map status to notification type
+        const statusToTypeMap = {
+            active: "user_activated",
+            banned: "user_banned",
+            suspended: "user_suspended",
+        };
+
+
+        const notifications = userIds.map((userId) => ({
+            sender: req.user._id,
+            receiver: userId,
+            type: statusToTypeMap[status],
+            priority: "high"
+        }));
+
+        await Notification.insertMany(notifications);
+
+
+        return res.status(200).json({
+            success: true,
+            message: `Successfully updated ${updatedData.modifiedCount} users to ${status}`,
+            modifiedCount: updatedData.modifiedCount,
+        });
 
     } catch (error) {
         console.log(error);
