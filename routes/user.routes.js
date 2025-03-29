@@ -1,5 +1,5 @@
 import express from 'express';
-import { changeStatus, deleteCoverImage, deleteProfilePhoto, deleteUserById, getAllDeletedUsers, getAllUsers, getListofSubscribedTo, getListofSubscribers, getUserById, loginHistory, meProfile, requestEmailUpdate, subscribeUser, unSubscribeUser, updateProfile, uploadCoverImage, uploadProfilePhoto, verifyEmailUpdate } from '../controllers/user.controller.js';
+import { bulkChangeUserStatus, changeStatus, deleteCoverImage, deleteProfilePhoto, deleteUserById, forceDeleteUserByUserId, getAllDeletedUsers, getAllUsers, getListofSubscribedTo, getListofSubscribers, getUserById, loginHistory, meProfile, requestEmailUpdate, subscribeUser, unSubscribeUser, updateProfile, uploadCoverImage, uploadProfilePhoto, verifyEmailUpdate } from '../controllers/user.controller.js';
 import { isAdmin, isAuthenticated } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/multer.js';
 
@@ -35,6 +35,9 @@ router.get("/getAllUsers", isAuthenticated, isAdmin, getAllUsers);
 router.get("/getAllDeletedUsers", isAuthenticated, isAdmin, getAllDeletedUsers);
 router.post("/user/change-status/:userId", isAuthenticated, isAdmin, changeStatus);
 // router.post("/user/deactive/")
+
+router.delete("/admin/force-delete-user/:userId", isAuthenticated, isAdmin, forceDeleteUserByUserId);
+router.put("/admin/bulk-change-status", isAuthenticated, isAdmin, bulkChangeUserStatus);
 
 
 
