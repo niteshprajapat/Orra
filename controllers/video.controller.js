@@ -4,6 +4,7 @@ import WatchHistory from "../models/watchHistory.model.js";
 import Notification from "../models/notification.model.js";
 import cloudinary from '../config/cloudinary.js';
 import fs from "fs";
+import { redisClient } from "../config/redis.js";
 
 
 // const uploadFromBuffer = async (buffer) => {
@@ -540,13 +541,47 @@ export const increaseVideoView = async (req, res) => {
 export const trendingVideos = async (req, res) => {
     try {
 
-        const videos = await Video.find({ isDelete: false }).sort({ views: -1, likes: -1, createdAt: -1 }).limit(20);
+        // const videos = await Video.find({ isDelete: false }).sort({ views: -1, likes: -1, createdAt: -1 }).limit(20);
 
-        return res.status(200).json({
-            success: true,
-            message: "Trending Videos!",
-            videos,
-        });
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "Trending Videos!",
+        //     videos,
+        // });
+
+
+        let videos;
+        const CACHE_EXPIRY_TIME = 120;
+
+        if (redisClient.isReady) {
+            videos = await redisClient.get("trendingVideos");
+        }
+
+        if (videos) {
+            console.log("Cache hit!");
+            videos = JSON.parse(videos);
+            return res.status(200).json({
+                success: true,
+                message: "Trending Videos!",
+                videos,
+            });
+        } else {
+            console.log("Cache miss!");
+            videos = await Video.find({ isDelete: false }).sort({ views: -1, likes: -1, createdAt: -1 }).limit(20);
+
+            if (redisClient.isReady) {
+                await redisClient.set("trendingVideos", JSON.stringify(videos), {
+                    EX: CACHE_EXPIRY_TIME,
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Trending Videos!",
+                videos,
+            });
+        }
+
 
 
     } catch (error) {
