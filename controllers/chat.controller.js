@@ -517,3 +517,62 @@ export const removeUserFromGroup = async (req, res) => {
         });
     }
 }
+
+// leaveGroupChat
+export const leaveGroupChat = async (req, res) => {
+    try {
+        const chatId = req.params.chatId;
+        const userId = req.user._id;
+
+        if (!chatId) {
+            return res.status(400).json({
+                success: false,
+                message: "Chat ID is required!",
+            });
+        }
+
+        const chat = await Chat.findById(chatId);
+        if (!chat || chat.isDeleted) {
+            return res.status(400).json({
+                success: true,
+                message: "Chat Not Found!",
+            });
+        }
+
+        if (chat.chatType !== "group") {
+            return res.status(400).json({
+                success: true,
+                message: "Not a Group Chat!",
+            });
+        }
+
+        if (!chat.participants.includes(userId)) {
+            return res.status(400).json({
+                success: true,
+                message: "Not in a Group!",
+            });
+        }
+
+        if (chat.groupAdmin.toString() === userId.toString()) {
+            return res.status(400).json({
+                success: true,
+                message: "Admin cannot leave, delete group instead!",
+            });
+        }
+
+        chat.participants = chat.participants.filter((id) => (id.toString() !== userId.toString()));
+        await chat.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "User Left group chat!",
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in leaveGroupChat API!",
+        });
+    }
+}
