@@ -1,6 +1,6 @@
 import express from "express";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
-import { addParticipantToGroup, createGroupChat, createOneToOneChat, deleteGroupChat, deleteMessage, deleteOneToOneChat, getChatMessages, markMessageRead, removeUserFromGroup, sendMessage } from "../controllers/chat.controller.js";
+import { addParticipantToGroup, createGroupChat, createOneToOneChat, deleteGroupChat, deleteMessage, deleteOneToOneChat, getChatMessages, leaveGroupChat, markMessageRead, removeUserFromGroup, sendMessage } from "../controllers/chat.controller.js";
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.delete("/chat/delete-group-chat/:chatId", isAuthenticated, deleteGroupCha
 router.delete("/chat/delete-message/:messageId", isAuthenticated, deleteMessage);
 router.delete("/chat/delete-one-to-one-chat/:chatId", isAuthenticated, deleteOneToOneChat);
 router.delete("/chat/group/remove-user/:chatId", isAuthenticated, removeUserFromGroup);
+router.put("/chat/group/leave/:chatId", isAuthenticated, leaveGroupChat);
 
 
 export default router;
