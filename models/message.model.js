@@ -2,8 +2,14 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
     content: {
-        type: String,
-        // required: true
+        url: {
+            type: String,
+            required: true // URL ya text yahan jayega
+        },
+        public_id: {
+            type: String, // Cloudinary public_id for deletion
+            default: ""
+        }
     },
     contentType: {
         type: String,
