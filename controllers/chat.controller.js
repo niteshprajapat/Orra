@@ -576,3 +576,53 @@ export const leaveGroupChat = async (req, res) => {
         });
     }
 }
+
+// editMessage
+export const editMessage = async (req, res) => {
+    try {
+        const messageId = req.params.messageId;
+        const { newContent } = req.body;
+        const userId = req.user._id;
+
+        if (!messageId) {
+            return res.status(400).json({
+                success: false,
+                message: "Message ID is required!",
+            });
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message || message.isDeleted) {
+            return res.status(400).json({
+                success: true,
+                message: "Message Not Found!",
+            });
+        }
+
+
+
+        if (message.sender.toString() !== userId.toString()) {
+            return res.status(400).json({
+                success: true,
+                message: "You can only edit your own message!",
+            });
+        }
+
+
+        message.content = newContent;
+        await message.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Message Updated Successfully!",
+            message,
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in leaveGroupChat API!",
+        });
+    }
+}
