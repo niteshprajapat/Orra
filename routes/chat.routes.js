@@ -1,13 +1,15 @@
 import express from "express";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import { addParticipantToGroup, createGroupChat, createOneToOneChat, deleteGroupChat, deleteMessage, deleteOneToOneChat, editMessage, getChatMessages, leaveGroupChat, markMessageRead, removeUserFromGroup, sendMessage } from "../controllers/chat.controller.js";
+import upload from '../middlewares/multer.js';
+
 
 const router = express.Router();
 
 
 router.post("/chat/one-to-one", isAuthenticated, createOneToOneChat);
 router.post("/chat/group-chat", isAuthenticated, createGroupChat);
-router.post("/chat/sendMessage", isAuthenticated, sendMessage);
+router.post("/chat/sendMessage", isAuthenticated, upload.single("file"), sendMessage);
 router.get("/chat/getChatMessages/:chatId", isAuthenticated, getChatMessages);
 router.get("/message-read/:messageId", isAuthenticated, markMessageRead);
 router.put("/chat/group/add", isAuthenticated, addParticipantToGroup);
