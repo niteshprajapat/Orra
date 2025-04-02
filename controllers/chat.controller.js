@@ -1,5 +1,30 @@
 import Chat from "../models/chat.model.js";
 import Message from "../models/message.model.js";
+import cloudinary from "../config/cloudinary.js";
+import fs from 'fs';
+
+
+
+
+// Function to upload file to Cloudinary
+const uploadToCloudinary = (filePath, folder) => {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(
+            filePath,
+            { folder, resource_type: "auto" }, // "auto" detects file type (image, video, raw)
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    fs.unlinkSync(filePath); // Delete local file after upload
+                    resolve(result);
+                }
+            }
+        );
+    });
+};
+
+
 
 
 // createOneToOneChat
@@ -103,6 +128,7 @@ export const sendMessage = async (req, res) => {
     try {
         const { content, contentType, chatId } = req.body;
         const userId = req.user._id;
+        const file = req.file;
 
         if (!chatId) {
             return res.status(404).json({
@@ -111,12 +137,12 @@ export const sendMessage = async (req, res) => {
             });
         }
 
-        if (!["text", "image", "file"].includes(contentType)) {
-            return res.status(404).json({
-                success: false,
-                message: "Invalid Content Type!",
-            });
-        }
+        // if (!["text", "image", "file"].includes(contentType)) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: "Invalid Content Type!",
+        //     });
+        // }
 
         const chat = await Chat.findById(chatId);
         if (!chat) {
@@ -133,21 +159,40 @@ export const sendMessage = async (req, res) => {
             });
         }
 
-        const message = await Message.create({
-            content,
-            contentType,
+        const messages = new Message({
             sender: userId,
             receiver: chat.participants.map((participant) => ({ userId: participant })),
         });
 
-        chat.messages.push(message);
+        // file upload if file is sending
+        if (file) {
+            const result = await uploadToCloudinary(file.path, "chat_files");
+            messages.content.url = result.secure_url;
+            messages.content.public_id = result.public_id;
+
+            console.log("resource_type => ", result.resource_type);
+
+            messages.contentType = result.resource_type === "image" ? "image" : "file";
+        } else if (content && content.trim() !== "") {
+            messages.content.url = content;
+            messages.content.public_id = "";
+            messages.contentType = "text";
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "Message content or file is required!",
+            });
+        }
+
+        await messages.save();
+        chat.messages.push(messages);
         chat.lastMessageAt = new Date(Date.now());
         await chat.save();
 
         return res.status(201).json({
             success: true,
             message: "Message Sent Successfully!",
-            chat,
+            messages,
         });
 
     } catch (error) {
