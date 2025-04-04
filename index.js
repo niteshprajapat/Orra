@@ -15,18 +15,14 @@ import notificationRoutes from './routes/notification.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import watchHistoryRoutes from './routes/watchHistory.routes.js';
 import commentRoutes from './routes/comment.routes.js';
+import chatRoutes from './routes/chat.routes.js';
 import './config/passport.js';
-
+import { connectToRedis } from './config/redis.js';
 
 /**
  * 
  * 
  * Build feature like save to library just like youtube have.
- * 
- * 
- * 
- * 
- * 
  * 
  */
 
@@ -34,6 +30,23 @@ import './config/passport.js';
 // config
 dotenv.config({});
 connectDB();
+// connectToRedis();
+
+// export const redisClient = redis.createClient({
+//     password: process.env.REDIS_PASSWORD,
+//     socket: {
+//         host: "redis-10910.c99.us-east-1-4.ec2.redns.redis-cloud.com",
+//         port: 10910,
+//     }
+// });
+
+// redisClient.connect().then(() => {
+//     console.log("Connected to Redis!");
+// }).catch((error) => {
+//     console.log(error);
+// });
+
+
 
 
 // initialization
@@ -74,6 +87,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/watchHistory", watchHistoryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/comments", commentRoutes);
+app.use("/api/v1/chats", chatRoutes);
 
 
 
