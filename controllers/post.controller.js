@@ -184,3 +184,150 @@ export const updatePostById = async (req, res) => {
         });
     }
 }
+
+// getUserPostsByUserId
+export const getUserPostsByUserId = async (req, res) => {
+    try {
+
+        const userId = req.params.userId;
+        const posts = await Post.find({ userId, isDeleted: false }).sort({ createdAt: -1 });
+
+
+
+        return res.status(201).json({
+            success: true,
+            message: "Fetched User Posts Successfully!",
+            posts,
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPost API!",
+        });
+    }
+}
+
+// getPostByPostId
+export const getPostByPostId = async (req, res) => {
+    try {
+
+        const postId = req.params.postId;
+
+        const post = await Post.findById(postId);
+
+        return res.status(201).json({
+            success: true,
+            message: "Fetched Post by Id Successfully!",
+            post,
+        });
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPost API!",
+        });
+    }
+}
+
+// likeUnlikePostByPostId
+export const likeUnlikePostByPostId = async (req, res) => {
+    try {
+
+        const postId = req.params.postId;
+        const userId = req.user._id;
+        const post = await Post.findById(postId);
+
+        if (!post.likes.includes(userId)) {
+            await Post.findByIdAndUpdate(
+                postId,
+                {
+                    $push: { likes: userId },
+                },
+                { new: true },
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Post liked Successfully!",
+            });
+        } else {
+            await Post.findByIdAndUpdate(
+                postId,
+                {
+                    $pull: { likes: userId },
+                },
+                { new: true },
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Like removed Successfully!",
+            });
+        }
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPost API!",
+        });
+    }
+}
+
+
+
+// likeUnlikePostByPostId
+export const dislikeRemoveDislikePostByPostId = async (req, res) => {
+    try {
+
+        const postId = req.params.postId;
+        const userId = req.user._id;
+        const post = await Post.findById(postId);
+
+        if (!post.dislikes.includes(userId)) {
+            await Post.findByIdAndUpdate(
+                postId,
+                {
+                    $push: { dislikes: userId },
+                },
+                { new: true },
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Post disliked Successfully!",
+            });
+        } else {
+            await Post.findByIdAndUpdate(
+                postId,
+                {
+                    $pull: { dislikes: userId },
+                },
+                { new: true },
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Dislike removed Successfully!",
+            });
+        }
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in createPost API!",
+        });
+    }
+}
