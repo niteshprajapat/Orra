@@ -16,6 +16,7 @@ import paymentRoutes from './routes/payment.routes.js';
 import watchHistoryRoutes from './routes/watchHistory.routes.js';
 import commentRoutes from './routes/comment.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import postRoutes from './routes/post.routes.js';
 import './config/passport.js';
 import { connectToRedis } from './config/redis.js';
 
@@ -88,6 +89,7 @@ app.use("/api/v1/watchHistory", watchHistoryRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/comments", commentRoutes);
 app.use("/api/v1/chats", chatRoutes);
+app.use("/api/v1/posts", postRoutes);
 
 
 
