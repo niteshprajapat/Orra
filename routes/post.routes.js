@@ -19,4 +19,4 @@ router.get("/dislike-removedislike-post/:postId", isAuthenticated, dislikeRemove
 
 // router.post("/create-comment/:postId", isAuthenticated, createCommentOnPost);
 
-export default router;
+export default router; 
