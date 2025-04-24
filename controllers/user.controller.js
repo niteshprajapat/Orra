@@ -1013,3 +1013,72 @@ export const bulkChangeUserStatus = async (req, res) => {
         });
     }
 }
+
+// getUserStats
+export const getUserStats = async (req, res) => {
+    try {
+
+        const users = await User.aggregate([
+            {
+                $facet: {
+                    totalUsers: [
+                        { $match: { isDelete: false } },
+                        { $count: "count" },
+                    ],
+                    activeUsers: [
+                        { $match: { isDelete: false, status: "active" } },
+                        { $count: "count" },
+                    ],
+                    bannedUsers: [
+                        { $match: { isDelete: false, status: "banned" } },
+                        { $count: "count" },
+                    ],
+                    suspendedUsers: [
+                        { $match: { isDelete: false, status: "suspended" } },
+                        { $count: "count" },
+                    ],
+                    newUsersLast30Days: [
+                        {
+                            $match: {
+                                isDelete: false,
+                                joinedOn: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+                            }
+                        },
+                        { $count: "count" }
+                    ],
+                }
+            },
+            {
+                $project: {
+                    totalUsers: { $arrayElemAt: ["$totalUsers.count", 0] },
+                    activeUsers: { $arrayElemAt: ["$activeUsers.count", 0] },
+                    bannedUsers: { $arrayElemAt: ["$bannedUsers.count", 0] },
+                    suspendedUsers: { $arrayElemAt: ["$suspendedUsers.count", 0] },
+                    newUsersLast30Days: { $arrayElemAt: ["$newUsersLast30Days.count", 0] },
+                }
+            }
+        ]);
+
+        console.log("users => ", users);
+
+
+        return res.status(200).json({
+            success: true,
+            data: users[0] || {
+                totalUsers: 0,
+                activeUsers: 0,
+                bannedUsers: 0,
+                suspendedUsers: 0,
+                newUsersLast30Days: 0,
+                verifiedUsers: 0
+            }
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in changeStatus API!",
+        });
+    }
+}
