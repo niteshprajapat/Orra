@@ -1245,4 +1245,179 @@ export const getVideoAnalytics = async (req, res) => {
 
 
 
+// getVideosStats
+export const getVideosStats = async (req, res) => {
+    try {
+
+        const videoStats = await Video.aggregate([
+            {
+                $match: {
+                    isDelete: false,
+                }
+            },
+            {
+                $facet: {
+                    totalVideos: [
+                        { $count: "count" }
+                    ],
+                    totalViews: [
+                        {
+                            $group: {
+                                _id: null,
+                                views: {
+                                    $sum: "$views"
+                                }
+                            }
+                        }
+                    ],
+                    totalWatchTime: [
+                        {
+                            $group: {
+                                _id: null,
+                                watchTime: {
+                                    $sum: "$watchTime"
+                                }
+                            }
+                        }
+                    ],
+                    activeVideos: [
+                        {
+                            $match: {
+                                status: "active",
+                            }
+                        },
+                        {
+                            $count: "count"
+                        }
+                    ],
+                    bannedVideos: [
+                        {
+                            $match: { status: "banned" }
+                        },
+                        {
+                            $count: "count"
+                        }
+                    ],
+                }
+            },
+            {
+                $project: {
+                    totalVideos: { $arrayElemAt: ["$totalVideos.count", 0] },
+                    totalViews: { $arrayElemAt: ["$totalViews.views", 0] },
+                    totalWatchTime: { $arrayElemAt: ["$totalWatchTime.watchTime", 0] },
+                    activeVideos: { $arrayElemAt: ["$activeVideos.count", 0] },
+                    bannedVideos: { $arrayElemAt: ["$bannedVideos.count", 0] },
+                }
+            }
+        ]);
+
+        console.log("videoStats", videoStats);
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched Videos Stats",
+            data: videoStats[0] || {
+                totalVideos: 0,
+                totalViews: 0,
+                totalWatchTime: 0,
+                videosByCategory: [],
+                activeVideos: 0,
+                bannedVideos: 0
+            }
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getVideosStats API!",
+        });
+    }
+}
+
+
+// getTrendingVideosStats
+export const getTrendingVideosStats = async (req, res) => {
+    try {
+
+        const trendingVideos = await Video.aggregate([
+            {
+                $match: {
+                    isDelete: false,
+                    status: "active",
+                    visibility: "public",
+                    createdAt: {
+                        $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    }
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    userId: 1,
+                    views: 1,
+                    watchTime: 1,
+                    likes: {
+                        $size: "$likes"
+                    },
+                    dislikes: {
+                        $size: "$dislikes"
+                    },
+                    comments: {
+                        $size: "$comments"
+                    },
+                    createdAt: 1,
+                }
+            },
+            { $sort: { views: -1, watchTime: -1 } },
+            { $limit: 10 },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "creator"
+                }
+            },
+            {
+                $unwind: "$creator"
+            },
+            {
+                $project: {
+                    title: 1,
+                    views: 1,
+                    watchTime: 1,
+                    likes: 1,
+                    dislikes: 1,
+                    comments: 1,
+                    createdAt: 1,
+                    creator: {
+                        username: "$creator.username",
+                        email: "$creator.email"
+                    }
+                }
+            }
+        ]);
+
+
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched Trending Videos",
+            trendingVideos,
+        })
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getVideosStats API!",
+        });
+    }
+}
+
 
