@@ -1,5 +1,5 @@
 import express from "express";
-import { banVideoByVideoId, changeVisibilityOfVideoByVideoId, createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllDeletedVideos, getAllReportedVideos, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getVideoAnalytics, getVideoById, getVideosByCategory, increaseVideoView, likeUnlikeVideo, reportVideoById, restoreVideoById, searchVideo, trendingVideos, unbanVideoByVideoId, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
+import { banVideoByVideoId, changeVisibilityOfVideoByVideoId, createVideo, deleteThumbnail, deleteVideoById, dislikeUndislikeVideo, getAllDeletedVideos, getAllReportedVideos, getAllVideos, getAllVideosOfUserByUserId, getRecommendedVideos, getTrendingVideosStats, getVideoAnalytics, getVideoById, getVideosByCategory, getVideosStats, increaseVideoView, likeUnlikeVideo, reportVideoById, restoreVideoById, searchVideo, trendingVideos, unbanVideoByVideoId, updateVideoDetails, updateVideoUrl, uploadThumbnail } from "../controllers/video.controller.js";
 import { isAdmin, isAuthenticated } from "../middlewares/authMiddleware.js";
 import upload from '../middlewares/multer.js';
 
@@ -45,6 +45,8 @@ router.get("/admin/ban-video/:videoId", isAuthenticated, isAdmin, banVideoByVide
 router.get("/admin/unban-video/:videoId", isAuthenticated, isAdmin, unbanVideoByVideoId);
 
 router.get("/video/:videoId/analytics", isAuthenticated, getVideoAnalytics);
+router.get("/admin/stats/videos", isAuthenticated, isAdmin, getVideosStats)
+router.get("/admin/stats/trending-videos-stats", isAuthenticated, isAdmin, getTrendingVideosStats)
 
 
 
