@@ -5,6 +5,7 @@ import Notification from "../models/notification.model.js";
 import cloudinary from '../config/cloudinary.js';
 import fs from "fs";
 import { redisClient } from "../config/redis.js";
+import mongoose from "mongoose";
 
 
 // const uploadFromBuffer = async (buffer) => {
@@ -1410,6 +1411,92 @@ export const getTrendingVideosStats = async (req, res) => {
         })
 
 
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error in getVideosStats API!",
+        });
+    }
+}
+
+
+
+// getVideoStatsById
+export const getVideoStatsById = async (req, res) => {
+    try {
+        const videoId = req.params.videoId;
+
+        const videoStats = await Video.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(videoId),
+                    isDelete: false,
+                }
+            },
+            {
+                $project: {
+                    userId: 1,
+                    title: 1,
+                    description: 1,
+                    views: 1,
+                    watchTime: 1,
+                    likes: { $size: "$likes" },
+                    dislikes: { $size: "$dislikes" },
+                    comments: { $size: "$comments" },
+                    category: 1,
+                    visibility: 1,
+                    status: 1,
+                    createdAt: 1,
+                    dailyStats: 1,
+                    reports: 1
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "creator"
+                }
+            },
+            {
+                $unwind: "$creator"
+            },
+            {
+                $project: {
+                    title: 1,
+                    description: 1,
+                    views: 1,
+                    watchTime: 1,
+                    likes: 1,
+                    dislikes: 1,
+                    comments: 1,
+                    category: 1,
+                    visibility: 1,
+                    status: 1,
+                    createdAt: 1,
+                    dailyStats: 1,
+                    reports: {
+                        count: { $size: "$reports" },
+                        reasons: "$reports.reason"
+                    },
+                    creator: {
+                        username: "$creator.username",
+                        email: "$creator.email"
+                    }
+                }
+            }
+        ]);
+
+        console.log(videoStats);
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetched Stats of particular video by VideoId",
+            data: videoStats[0],
+        })
 
     } catch (error) {
         console.log(error);
