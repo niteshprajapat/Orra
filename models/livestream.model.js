@@ -9,15 +9,20 @@ const liveStreamSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
-        trim: true,
     },
     description: {
         type: String,
-        trim: true,
+        required: true,
     },
     thumbnail: {
-        url: String,
-        public_id: String,
+        url: {
+            type: String,
+            default: "",
+        },
+        public_id: {
+            type: String,
+            default: "",
+        },
     },
     streamKey: {
         type: String,
@@ -29,19 +34,11 @@ const liveStreamSchema = new mongoose.Schema({
         enum: ["live", "ended", "scheduled"],
         default: "scheduled",
     },
-    viewers: {
-        type: Number,
-        default: 0,
-    },
-    category: {
-        type: String,
-        trim: true,
-    },
-    tags: [
+    viewes: [
         {
-            type: String,
-            trim: true,
-        },
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
     ],
     isDeleted: {
         type: Boolean,
